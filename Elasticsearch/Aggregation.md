@@ -1,8 +1,8 @@
-# Aggregation 聚合
+# Elasticsearch Aggregation 聚合
 
 Elasticsearch 除了提供搜尋的功能外，也提供資料統計的功能，Aggregation 指的即是資料統計
 
-和 query 是同層級的
+他和 query 是同層級的
 
 聚合主要的功能有以下四個：
 
@@ -29,12 +29,15 @@ GET(或POST) house/_search?size=0
 }
 ```
 
+如果不寫 size 為 0，回傳結果中的 hits 部分會看見「所有的資料」(非符合條件或分群中的資料)，對聚合來說其實沒什麼參考價值，可以不用看
+
 ### ****Metric Aggregation (指標型聚合)****
 
 簡單來說就是可以用來計算最大值、最小值、平均值、總和等等的功能
 
-單值分析(single-value numeric metrics aggregation)可以使用的功能包含：
+又可分為兩類：
 
+1. **單值分析**(single-value numeric metrics aggregation)，可以使用的功能包含：
 - min：最小值
 - max：最大值
 - avg：平均值
@@ -45,7 +48,7 @@ GET(或POST) house/_search?size=0
 例：找出所有資料中 unitPrice 的最大值及最小值
 
 ```json
-GET house/_search
+GET house/_search?size=0
 {
   "aggs": {
     "max_unitPrice": {
@@ -78,8 +81,7 @@ GET house/_search
 }
 ```
 
-多值分析(multi-value numeric metrics aggregation)常用的功能包含 :
-
+1. **多值分析**(multi-value numeric metrics aggregation)，常用的功能包含 :
 - stats : 列出一系列的數值型別統計
 - extended_stats : stats 的擴充，可以列出更多統計資料，例如 : 標準差
 - percentiles : 百分位數統計
@@ -89,7 +91,7 @@ GET house/_search
 **stats**
 
 ```json
-GET house/_search
+GET house/_search?size=0
 {
   "aggs": {
     "stats分群": {
@@ -127,14 +129,16 @@ GET house/_search
 - date_histogram : 依照指定時間間隔分群
 - filter：用查詢的方式分群(亦可做統計)
 
+桶型聚合的回傳結果中都會有個 doc_count 屬性，表示該分群中的資料數量有多少
+
 **terms**
 
 terms 預設是回傳 10 筆分群結果，若分群會超過 10 筆以上，可在 size 屬性中設定回傳筆數
 
-依照 city 分群
+例：依照 city 欄位分群
 
 ```json
-GET house/_search
+GET house/_search?size=0
 {
   "aggs": {
     "terms分群":{
@@ -171,14 +175,69 @@ city 為台北市的資料有 2 筆，為新北市的有 1 筆
 }
 ```
 
+例：依 city 分群，並計算每個分群中的 unitPrice 平均
+
+```json
+GET house/_search?size=0
+{
+  "aggs": {
+    "依city分群": {
+			// 桶型聚合
+      "terms": {
+        "field": "city.keyword",
+        "size": 10
+      },
+			// 指標型聚合(再做一次 aggs)
+      "aggs": {
+        "分群中的unitPrice平均": {
+          "avg": {
+            "field": "unitPrice"
+          }
+        }
+      }
+    }
+  }
+}
+```
+
+```json
+{
+	...
+	"aggregations" : {
+    "依city分群" : {
+      "doc_count_error_upper_bound" : 0,
+      "sum_other_doc_count" : 0,
+      "buckets" : [
+        {
+          "key" : "台北市",
+          "doc_count" : 2,
+          "分群中的unitPrice平均" : {
+            "value" : 66.5
+          }
+        },
+        {
+          "key" : "新北市",
+          "doc_count" : 1,
+          "分群中的unitPrice平均" : {
+            "value" : 30.0
+          }
+        }
+      ]
+    }
+  }
+}
+```
+
 **range**
 
 to：**小於**某數
 
 from：**大於等於**某數
 
+例：將 unitPrice 分成 x <50、50 ≤ x < 100 及 x ≥ 100 三群
+
 ```json
-GET house/_search
+GET house/_search?size=0
 {
   "aggs": {
     "range分群":{
@@ -234,10 +293,10 @@ GET house/_search
 
 用 range 也行
 
-查詢 createTime 為兩年內的(即大於等於兩年前的時間點)(/d指時間顯示到最小的單位為 day)
+例：查詢 createTime 為兩年內的(即大於等於兩年前的時間點且小於今天)(/d指時間顯示到最小的單位為 day)
 
 ```json
-GET house/_search
+GET house/_search?size=0
 {
   "aggs": {
     "date_range分群":{
@@ -279,10 +338,10 @@ GET house/_search
 
 依一定的間隔分群
 
-例：以 10 為區間分群
+例：unitPrice 以 10 為區間分群
 
 ```json
-GET house/_search
+GET house/_search?size=0
 {
   "aggs": {
     "histogram分群": {
@@ -331,7 +390,7 @@ GET house/_search
 例：city 為台北市的資料為一群，並計算此群的 unitPrice 平均
 
 ```json
-GET house/_search
+GET house/_search?size=0
 {
   "aggs": {
     "filter分群":{
@@ -366,6 +425,38 @@ GET house/_search
 }
 ```
 
+例：在 filter 分群中使用 bool query
+
+```json
+GET house/_search?size=0
+{
+  "aggs": {
+    "filter分群中使用bool query":{
+      "filter": {
+        "bool": {
+          "must":{
+            "match_phrase":{
+              "city.keyword": "台北市"
+            }
+          }
+        }
+      }
+    }
+  }
+}
+```
+
+```json
+{
+	...
+	"aggregations" : {
+    "filter分群中使用bool query" : {
+      "doc_count" : 2
+    }
+  }
+}
+```
+
 ### ****Pipeline Aggregation (管道型聚合)****
 
 - Parent：在父聚合的結果上進行聚合分析並且可以計算出新的桶子或是將新的聚合結果加入到現有的桶子中。
@@ -373,7 +464,7 @@ GET house/_search
 
 **Sibling**
 
-Sibiling 提供了以下這些常用的功能，這些功能大致與指標型聚合提供的是一樣的，差別在 Sibiling 是計算每一分群內的資料
+Sibiling 提供了以下這些常用的功能，這些功能大致與指標型聚合提供的是一樣的，差別在 Sibiling 計算的對象是分群資料
 
 - avg_bucket
 - max_bucket
@@ -385,28 +476,31 @@ Sibiling 提供了以下這些常用的功能，這些功能大致與指標型�
 
 **sum_bucket**
 
-在「依city分群」的 terms 分群下，又有一個指標型聚合，名稱是「分群中的unitPrice總和」，而另一個「兄弟分群」的 sum_bucket 分群下，則須在 buckets_path 屬性中指名要做總合的路徑
+在「依 city 分群」的 terms 分群下，又有一個指標型聚合，名稱是「分群中的 unitPrice 總和」，而另一個「兄弟分群」的 sum_bucket 分群下，則須在 buckets_path 屬性中指名要做總合的路徑
 
 ```json
-GET house/_search
+GET house/_search?size=0
 {
   "aggs": {
     "依city分群": {
+			// 桶型聚合
       "terms": {
         "field": "city.keyword",
         "size": 10
       },
+			// 指標型聚合
       "aggs": {
-        "分群中的unitPrice總和": {
-          "sum": {
+        "分群中的unitPrice平均": {
+          "avg": {
             "field": "unitPrice"
           }
         }
       }
     },
+		// 管道型聚合
     "兄弟分群": {
-      "sum_bucket": {
-        "buckets_path": "依city分群>分群中的unitPrice總和"
+      "avg_bucket": {
+        "buckets_path": "依city分群>分群中的unitPrice平均"
       }
     }
   }
@@ -417,29 +511,29 @@ GET house/_search
 {
 	...
 	"aggregations" : {
-	  "依city分群" : {
-	    "doc_count_error_upper_bound" : 0,
-	    "sum_other_doc_count" : 0,
-	    "buckets" : [
-	      {
-	        "key" : "台北市",
-	        "doc_count" : 2,
-	        "分群中的unitPrice總和" : {
-	          "value" : 133.0
-	        }
-	      },
-	      {
-	        "key" : "新北市",
-	        "doc_count" : 1,
-	        "分群中的unitPrice總和" : {
-	          "value" : 30.0
-	        }
-	      }
-	    ]
-	  },
-	  "兄弟分群" : {
-	    "value" : 163.0 // sum_bucket 會算全部資料的總和
-	  }
-	}
+    "依city分群" : {
+      "doc_count_error_upper_bound" : 0,
+      "sum_other_doc_count" : 0,
+      "buckets" : [
+        {
+          "key" : "台北市",
+          "doc_count" : 2,
+          "分群中的unitPrice平均" : {
+            "value" : 66.5
+          }
+        },
+        {
+          "key" : "新北市",
+          "doc_count" : 1,
+          "分群中的unitPrice平均" : {
+            "value" : 30.0
+          }
+        }
+      ]
+    },
+    "兄弟分群" : {
+      "value" : 48.25
+    }
+  }
 }
 ```
