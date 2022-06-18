@@ -69,15 +69,15 @@ GET house/_search?size=0
 
 ```json
 {
-	...
-	"aggregations" : {
-	  "min_unitPrice" : {
-	    "value" : 30.0
-	  },
-	  "max_unitPrice" : {
-	    "value" : 100.0
-	  }
-	}
+  ...
+  "aggregations" : {
+    "min_unitPrice" : {
+      "value" : 30.0
+    },
+    "max_unitPrice" : {
+      "value" : 100.0
+    }
+  }
 }
 ```
 
@@ -105,8 +105,8 @@ GET house/_search?size=0
 
 ```json
 {
-	...
-	"aggregations" : {
+  ...
+  "aggregations" : {
     "stats分群" : {
       "count" : 3,
       "min" : 30.0,
@@ -155,23 +155,23 @@ city 為台北市的資料有 2 筆，為新北市的有 1 筆
 
 ```json
 {
-	...
-	"aggregations" : {
-		"terms分群" : {
-		  "doc_count_error_upper_bound" : 0,
-		  "sum_other_doc_count" : 0,
-		  "buckets" : [
-		    {
-		      "key" : "台北市",
-		      "doc_count" : 2
-		    },
-		    {
-		      "key" : "新北市",
-		      "doc_count" : 1
-		    }
-		  ]
-		}
+  ...
+  "aggregations" : {
+    "terms分群" : {
+      "doc_count_error_upper_bound" : 0,
+      "sum_other_doc_count" : 0,
+      "buckets" : [
+        {
+          "key" : "台北市",
+	  "doc_count" : 2
+	},
+	{
+	  "key" : "新北市",
+	  "doc_count" : 1
 	}
+      ]
+    }
+  }
 }
 ```
 
@@ -182,12 +182,12 @@ GET house/_search?size=0
 {
   "aggs": {
     "依city分群": {
-			// 桶型聚合
+      // 桶型聚合
       "terms": {
         "field": "city.keyword",
         "size": 10
       },
-			// 指標型聚合(再做一次 aggs)
+      // 指標型聚合(再做一次 aggs)
       "aggs": {
         "分群中的unitPrice平均": {
           "avg": {
@@ -202,8 +202,8 @@ GET house/_search?size=0
 
 ```json
 {
-	...
-	"aggregations" : {
+  ...
+  "aggregations" : {
     "依city分群" : {
       "doc_count_error_upper_bound" : 0,
       "sum_other_doc_count" : 0,
@@ -263,29 +263,29 @@ GET house/_search?size=0
 
 ```json
 {
-	...
-	"aggregations" : {
-	  "range分群" : {
-	    "buckets" : [
-	      {
-	        "key" : "*-50.0",
-	        "to" : 50.0,
-	        "doc_count" : 2
-	      },
-	      {
-	        "key" : "50.0-100.0",
-	        "from" : 50.0,
-	        "to" : 100.0,
-	        "doc_count" : 0
-	      },
-	      {
-	        "key" : "100.0-*",
-	        "from" : 100.0,
-	        "doc_count" : 1
-	      }
-	    ]
-	  }
+  ...
+  "aggregations" : {
+    "range分群" : {
+      "buckets" : [
+	{
+	  "key" : "*-50.0",
+	  "to" : 50.0,
+	  "doc_count" : 2
+	},
+        {
+	  "key" : "50.0-100.0",
+	  "from" : 50.0,
+	  "to" : 100.0,
+	  "doc_count" : 0
+	},
+	{
+	  "key" : "100.0-*",
+	  "from" : 100.0,
+	  "doc_count" : 1
 	}
+      ]
+    }
+  }
 }
 ```
 
@@ -305,7 +305,7 @@ GET house/_search?size=0
         "ranges": [
           {
             "from": "now-2y/d",
-						"to": "now/d"
+	    "to": "now/d"
           }
         ]
       }
@@ -316,8 +316,8 @@ GET house/_search?size=0
 
 ```json
 {
-	...
-	"aggregations" : {
+  ...
+  "aggregations" : {
     "date_range分群" : {
       "buckets" : [
         {
@@ -359,21 +359,21 @@ GET house/_search?size=0
 
 ```json
 {
-	...
-	"aggregations" : {
-	  "histogram分群" : {
-	    "buckets" : [
-	      {
-	        "key" : 30.0,
-	        "doc_count" : 2
-	      },
-	      {
-	        "key" : 100.0,
-	        "doc_count" : 1
-	      }
-	    ]
-	  }
+  ...
+  "aggregations" : {
+    "histogram分群" : {
+      "buckets" : [
+	{
+	  "key" : 30.0,
+	  "doc_count" : 2
+	},
+	{
+	  "key" : 100.0,
+	  "doc_count" : 1
 	}
+      ]
+    }
+  }
 }
 ```
 
@@ -413,7 +413,7 @@ GET house/_search?size=0
 
 ```json
 {
-	...
+  ...
   "aggregations" : {
     "filter分群" : {
       "doc_count" : 2,
@@ -448,8 +448,8 @@ GET house/_search?size=0
 
 ```json
 {
-	...
-	"aggregations" : {
+  ...
+  "aggregations" : {
     "filter分群中使用bool query" : {
       "doc_count" : 2
     }
@@ -483,12 +483,12 @@ GET house/_search?size=0
 {
   "aggs": {
     "依city分群": {
-			// 桶型聚合
+      // 桶型聚合
       "terms": {
         "field": "city.keyword",
         "size": 10
       },
-			// 指標型聚合
+      // 指標型聚合
       "aggs": {
         "分群中的unitPrice平均": {
           "avg": {
@@ -497,7 +497,7 @@ GET house/_search?size=0
         }
       }
     },
-		// 管道型聚合
+    // 管道型聚合
     "兄弟分群": {
       "avg_bucket": {
         "buckets_path": "依city分群>分群中的unitPrice平均"
@@ -509,8 +509,8 @@ GET house/_search?size=0
 
 ```json
 {
-	...
-	"aggregations" : {
+  ...
+  "aggregations" : {
     "依city分群" : {
       "doc_count_error_upper_bound" : 0,
       "sum_other_doc_count" : 0,
